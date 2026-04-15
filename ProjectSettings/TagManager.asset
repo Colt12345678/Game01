@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Ground
   - Player 1
+  - Checkpoint
+  - Death zone
+  - DeathZone
   layers:
   - Default
   - TransparentFX
