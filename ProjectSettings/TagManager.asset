@@ -9,6 +9,9 @@ TagManager:
   - Checkpoint
   - Death zone
   - DeathZone
+  - BouncePad
+  - Lava
+  - Coin
   layers:
   - Default
   - TransparentFX

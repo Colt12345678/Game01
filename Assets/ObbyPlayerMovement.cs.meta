@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: d862a9d32d5e245078bb64708d14cff4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - controller: {instanceID: 0}
+  - cam: {instanceID: 0}
+  - winScreen: {fileID: 2134918067513771467, guid: 38a02d4bf475640d5bc045823eca50b7, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
