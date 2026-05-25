@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro; // We need this line to talk to your TextMeshPro UI!
+using TMPro;
 
 public class ObbyPlayerMovement : MonoBehaviour
 {
@@ -8,59 +8,58 @@ public class ObbyPlayerMovement : MonoBehaviour
     public Transform cam;
 
     [Header("UI Slots")]
-    public GameObject winScreen;      // Slot for your "YOU WIN!" text
-    public TextMeshProUGUI scoreText; // Slot for your "Score: 0" text
+    public GameObject winScreen;      
+    public TextMeshProUGUI scoreText; 
+
+    [Header("Effects")]
+    public GameObject coinParticlePrefab; 
+    public GameObject trailParticlePrefab; 
+    private ParticleSystem currentTrail;   
 
     [Header("Movement Stats")]
     public float speed = 8f;
     public float gravity = -20f;
-    public float jumpHeight = 3f;
+    public float jumpHeight = 6f; 
     public float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
+
+    [Header("Double Jump Settings")]
+    public int maxJumps = 2;       
+    private int jumpCountRemaining; 
 
     private Vector3 velocity;
     private bool isGrounded;
     
-    // Checkpoint & Game Memory
     private Vector3 respawnPoint;
-    private int score = 0; // Your starting score
+    private int score = 0; 
 
     private void Start()
     {
-        // Hide the mouse cursor so it doesn't get in the way
         Cursor.lockState = CursorLockMode.Locked;
-        
-        // Save the very first spot you spawn as your first checkpoint
         respawnPoint = transform.position; 
 
-        // Make sure the win screen is hidden when the game starts
-        if (winScreen != null)
-        {
-            winScreen.SetActive(false);
-        }
-
-        // Set the score text to 0 when the game starts
-        if (scoreText != null)
-        {
-            scoreText.text = "Score: " + score;
-        }
+        if (winScreen != null) winScreen.SetActive(false);
+        if (scoreText != null) scoreText.text = "Score: " + score;
+        
+        jumpCountRemaining = maxJumps; 
     }
 
     private void Update()
     {
-        // 1. Check if we are touching the ground
+        if (controller == null) return;
+
         isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0)
+        
+        if (isGrounded && velocity.y < 0) 
         {
             velocity.y = -2f; 
+            jumpCountRemaining = maxJumps; 
         }
 
-        // 2. Get WASD / Arrow Key Input
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
-        // 3. Move the player relative to where the camera is looking
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -71,84 +70,110 @@ public class ObbyPlayerMovement : MonoBehaviour
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
 
-        // 4. Normal Jumping
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        // Double Jump Input Configuration
+        if (Input.GetButtonDown("Jump"))
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            if (isGrounded || jumpCountRemaining > 0) 
+            {
+                if (!isGrounded)
+                {
+                    jumpCountRemaining--; 
+                }
+                else
+                {
+                    jumpCountRemaining = maxJumps - 1; 
+                }
+
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            }
         }
 
-        // 5. Apply Gravity
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 
-    // --------------------------------------------------------
-    // TRIGGER COLLISIONS (Checkpoints, Death Zones, Finish Line, Coins)
-    // --------------------------------------------------------
     private void OnTriggerEnter(Collider other)
     {
-        // CHECKPOINT
         if (other.gameObject.CompareTag("Checkpoint"))
         {
             respawnPoint = other.transform.position + new Vector3(0, 1.5f, 0);
             Debug.Log("CHECKPOINT SAVED!"); 
         }
         
-        // INVISIBLE DEATH ZONE
         if (other.gameObject.CompareTag("DeathZone"))
         {
-            Debug.Log("DEATH ZONE HIT! Teleporting...");
+            StopTrail(); 
             controller.enabled = false; 
             transform.position = respawnPoint; 
             controller.enabled = true; 
         }
 
-        // THE FINISH LINE
         if (other.gameObject.CompareTag("Finish"))
         {
-            Debug.Log("🏆 YOU WIN! COURSE COMPLETED! 🏆");
-            controller.enabled = false; // Freeze the player
-            
-            if (winScreen != null)
-            {
-                winScreen.SetActive(true); // Turn on the victory text
-            }
+            StopTrail();
+            controller.enabled = false; 
+            if (winScreen != null) winScreen.SetActive(true);
         }
 
-        // COLLECTIBLE COINS
         if (other.gameObject.CompareTag("Coin"))
         {
-            score += 1; // Add 1 point
-            
-            if (scoreText != null)
+            score += 1; 
+            if (scoreText != null) scoreText.text = "Score: " + score;
+
+            if (coinParticlePrefab != null)
             {
-                scoreText.text = "Score: " + score; // Update the UI
+                Instantiate(coinParticlePrefab, other.transform.position, Quaternion.identity);
             }
 
-            Destroy(other.gameObject); // Make the coin disappear
-            Debug.Log("Coin Collected!");
+            Destroy(other.gameObject); 
         }
     }
 
-    // --------------------------------------------------------
-    // PHYSICAL COLLISIONS (Bounce Pads and Lava Blocks)
-    // --------------------------------------------------------
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        // BOUNCE PAD
+        if (controller == null) return;
+
         if (hit.gameObject.CompareTag("BouncePad"))
         {
             velocity.y = Mathf.Sqrt(15f * -2f * gravity);
-            Debug.Log("BOING!");
+            jumpCountRemaining = maxJumps - 1; 
         }
 
-        // DEADLY LAVA BLOCK
         if (hit.gameObject.CompareTag("Lava"))
         {
-            Debug.Log("OUCH! Hit Lava! Teleporting...");
+            StopTrail();
             controller.enabled = false; 
             transform.position = respawnPoint; 
             controller.enabled = true; 
+        }
+
+        if (hit.gameObject.CompareTag("EffectBlock"))
+        {
+            StartTrail();
+        }
+        else
+        {
+            StopTrail();
+        }
+    }
+
+    private void StartTrail()
+    {
+        if (currentTrail == null && trailParticlePrefab != null)
+        {
+            GameObject trailObj = Instantiate(trailParticlePrefab, transform.position, Quaternion.identity, transform);
+            currentTrail = trailObj.GetComponent<ParticleSystem>();
+        }
+    }
+
+    private void StopTrail()
+    {
+        if (currentTrail != null)
+        {
+            currentTrail.transform.parent = null; 
+            currentTrail.Stop();                  
+            Destroy(currentTrail.gameObject, 2f); 
+            currentTrail = null;
         }
     }
 }

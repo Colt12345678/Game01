@@ -12,6 +12,7 @@ TagManager:
   - BouncePad
   - Lava
   - Coin
+  - EffectBlock
   layers:
   - Default
   - TransparentFX
