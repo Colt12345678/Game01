@@ -13,6 +13,9 @@ TagManager:
   - Lava
   - Coin
   - EffectBlock
+  - Speedpad
+  - Speed
+  - SpeedPad
   layers:
   - Default
   - TransparentFX

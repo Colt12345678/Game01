@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: d862a9d32d5e245078bb64708d14cff4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - controller: {fileID: 9081071141919414583, guid: 38a02d4bf475640d5bc045823eca50b7, type: 3}
+  - cam: {fileID: 6768893066157710283, guid: 0a08c6a2d9d924eebaa2ad34d31fc0b6, type: 3}
+  - winScreen: {fileID: 8536717846813535376, guid: cc1080d22bb4343668c864733314ceb0, type: 3}
+  - scoreText: {fileID: 186338609568052358, guid: 2c605da5410ac4af3922327c39512a25, type: 3}
+  - coinParticlePrefab: {instanceID: 0}
+  - trailParticlePrefab: {fileID: 857285426498123009, guid: d0f3e513aec0e47d0bf59c120ce02aa5, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
